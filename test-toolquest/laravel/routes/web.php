@@ -9,8 +9,12 @@ Route::get('/', function () {
     return view('test-sql');
 });
 
-Route::post('/test-sql', [VulnLoginController::class, 'login']);
+//Route::post('/test-sql', [VulnLoginController::class, 'login']);
 
 Route::get('/profile/{id}', [ProfileController::class, 'show']);
+
+Route::post('/api/login', [VulnLoginController::class, 'login']);
+
+
 
 

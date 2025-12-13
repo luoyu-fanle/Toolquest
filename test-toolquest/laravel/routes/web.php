@@ -13,7 +13,11 @@ Route::get('/', function () {
 
 Route::get('/profile/{id}', [ProfileController::class, 'show']);
 
-Route::post('/api/login', [VulnLoginController::class, 'login']);
+// Route::post('/api/login', [VulnLoginController::class, 'login']);
+
+Route::post('api/signup', [AppSignUpController::class, 'signUp']);
+
+Route::post('api/login', [AppLogInController::class, 'logIn']);
 
 
 

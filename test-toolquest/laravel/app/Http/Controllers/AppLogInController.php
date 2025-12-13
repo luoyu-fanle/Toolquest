@@ -24,6 +24,7 @@ class AppLogInController extends Controller
 
         $result = $this->loginService->createLogIn($username, $password);
         if (isset($result['login_success'])) {
+            
             return redirect('/profile')->with('success', $result['login_success']);
         } else {
             $errorMessage = $result['invalid_credentials'] ?? $result['empty_input'] ?? 'An unknown error occurred.';

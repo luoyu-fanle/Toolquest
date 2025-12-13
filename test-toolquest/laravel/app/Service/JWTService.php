@@ -38,12 +38,12 @@ class JWTService
 
     }
     
-    function makeRefreshToken(): bool {
+    function makeRefreshToken(string $userID): bool {
         $issuedAt = time();
         $expiresAt = $issuedAt + 28800; ///8 uur
         $refreshToken = bin2hex(random_bytes(64));
         // TODO: Zorg ervoor dat $this->authModel->saveRefreshToken de refresh token, user ID en expiresAt accepteert
-        $saveTokenResult = $this->authModel->saveRefreshToken(expiresAt: $expiresAt);
+        $saveTokenResult = $this->authModel->saveRefreshToken($euserID, hash('sha256', $refreshToken), $expiresAt);
         if ($saveTokenResult === true) {
             $cookieResult = $this->sendCookie($refreshToken, "refresh_token", 28800);
             if (!$cookieResult) {

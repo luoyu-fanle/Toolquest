@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Http\Service;
 
 use App\Models\AuthenticationModel;
+use App\Service\JWTService;
 class LoginService
 {
     protected $authModel;
@@ -14,26 +15,48 @@ class LoginService
 
 
     function createLogin(string $username, string $inputHashedPassword): array {
-        $returnvalues = [];
+        $returnValues = [];
 
         if ($this->checkEmpty($username) || $this->checkEmpty($inputHashedPassword)) {
-            $returnvalues["empty_input"] = "Please fill in all the fields";
-            return $returnvalues;
+            $returnValues["empty_input"] = "Please fill in all the fields";
+            return $returnValues;
         }
 
         if (!$this->checkCredentials($username, $inputHashedPassword)) {
-            $returnvalues["invalid_credentials"] = "Invalid username or password.";
-            return $returnvalues;
+            $returnValues["invalid_credentials"] = "Invalid username or password.";
+            return $returnValues;
         }
 
-        $returnvalues["login_success"] = "Login successful";
-        return $returnvalues;
+        if (!$this->checkTokens($username)) {
+            $returnValues["login_failed"] = "Failed to create tokens.";
+            return $returnValues;
+        }
+
+        $returnValues["login_success"] = "Login successful";
+        return $returnValues;
     }
 
+    function checkTokens (string $username): bool {
+        // Implement token validation logic here
+        $userData = $this->authmodel->getUserDataByUsername($username);
+        
+        if ($userData) {
+            $userID = $userData['id'];
+            $role = $userData['roles'];
+            
+            $jwtTokenResult = $this->jwtService->makeJwtToken($userID, $username, $role);
+            $refreshTokenResult = $this->jwtService->makeRefreshToken();
+            if ($jwtTokenResult !== null && $refreshTokenResult === true) {
+                return true;
+            }
+
+        }
+        return false;
+    }
     function checkEmpty(string $value): bool {
         return empty($value);
     }
-    
+
     function checkCredentials(string $username, string $inputHashedPassword): bool {
         if($this->authModel->checkUsernameExistence($username)) {
             if ($this->checkPasswords($username, $inputHashedPassword)) {
@@ -47,9 +70,9 @@ class LoginService
     public function checkPasswords(string $username, string $inputHashedPassword): bool {
         $storedHash = $this->authModel->getHashedPasswordByUsername($username);
         if ($storedHash === null) {
-            return false; 
+            return false;
         }
         return hash_equals($storedHash, $inputHashedPassword);
     }
-
+    
 }

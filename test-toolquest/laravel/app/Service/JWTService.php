@@ -16,7 +16,7 @@ class JWTService
         $this->authModel = $authModel;
     }
 
-    function makeJwtToken(string $userID, string $username, string $role): string {
+    function makeJwtToken(string $userID, string $username, string $role): string|null {
         $secretkey = env('JWT_SECRET'); ///van .env
         $issuedAt = time();
         $expiresAt = $issuedAt + 900; // 15 minuten
@@ -30,34 +30,46 @@ class JWTService
         ];
 
         $jwt = JWT::encode($payload, $secretkey, 'HS256');
-        $this->sendCookie($this->jwtToken, "jwt", 900);
+        $cookieResult = $this->sendCookie($jwt, "jwt", 900);
+        if (!$cookieResult) {
+            return null;
+        }
         return $jwt;
 
     }
     
-    function makeRefreshToken() {
+    function makeRefreshToken(): bool {
         $issuedAt = time();
         $expiresAt = $issuedAt + 28800; ///8 uur
         $refreshToken = bin2hex(random_bytes(64));
+        // TODO: Zorg ervoor dat $this->authModel->saveRefreshToken de refresh token, user ID en expiresAt accepteert
         $saveTokenResult = $this->authModel->saveRefreshToken(expiresAt: $expiresAt);
         if ($saveTokenResult === true) {
-            $this->sendCookie($this->refreshToken, "refresh_token", 28800);
+            $cookieResult = $this->sendCookie($refreshToken, "refresh_token", 28800);
+            if (!$cookieResult) {
+                return false;
+            }
         }
+        return true ;
     }
 
-    private function sendCookie($token, string $name, int $date) {
-        setcookie($name, $token, [
+    private function sendCookie($token, string $name, int $date):bool {
+        $result = setcookie($name, $token, [
             'path' => '/',
             'httponly' => true,
             'secure' => true,
             'samesite' => 'Strict',
             'max-age' => $date, // 8 uur/ 15min
         ]);
+        if(!$result){
+            return false;
+        }
+        return true;
     }
     //////////////////////////////////////////
     //////////Weak key verify/////////////////
     //////////////////////////////////////////
-    function verifyJwtTokenWeakKey(string $jwtToken): array {
+    function verifyJwtTokenWeakKey(string $jwtToken): array|null {
         $secretkey = env('JWT_SECRET'); ///van .env
 
         try {
@@ -71,14 +83,20 @@ class JWTService
     //////////////////////////////////////////
     //////////arbitrary signatures////////////
     //////////////////////////////////////////
-    function decodeRandomJwtToken($jwtToken){
+    function decodeRandomJwtToken($jwtToken): array|null {
         $parts = explode('.', $jwtToken);
         
+        if (count($parts) !== 3) {
+            return null;
+        }
+
         $header = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
         $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+        
         if (!$this->validateExpiration($header)) {
             return null; // Token is expired
         }
+
         return [
             'header' => $header,
             'payload' => $payload,

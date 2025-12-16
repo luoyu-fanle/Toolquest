@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Service;
 
 use App\Models\AuthenticationModel;
 

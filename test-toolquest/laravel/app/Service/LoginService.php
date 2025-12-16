@@ -1,16 +1,18 @@
 <?php
 
-namespace App\Http\Service;
+namespace App\Service;
 
 use App\Models\AuthenticationModel;
 use App\Service\JWTService;
 class LoginService
 {
     protected $authModel;
+    protected $jwtService;
 
-    public function __construct(AuthenticationModel $authModel)
+    public function __construct(AuthenticationModel $authModel, JWTService $jwtService = null)
     {
         $this->authModel = $authModel;
+        $this->jwtService = $jwtService ?: new JWTService($authModel);
     }
 
 
@@ -38,14 +40,14 @@ class LoginService
 
     function checkTokens (string $username): bool {
         // Implement token validation logic here
-        $userData = $this->authmodel->getUserDataByUsername($username);
+        $userData = $this->authModel->getUserDataByUsername($username);
         
         if ($userData) {
             $userID = $userData['id'];
             $role = $userData['roles'];
             
             $jwtTokenResult = $this->jwtService->makeJwtToken($userID, $username, $role);
-            $refreshTokenResult = $this->jwtService->makeRefreshToken();
+            $refreshTokenResult = $this->jwtService->makeRefreshToken($userID);
             if ($jwtTokenResult !== null && $refreshTokenResult === true) {
                 return true;
             }

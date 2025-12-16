@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Services\SignUpService;
+use App\Service\SignUpService;
 
 class AppSignUpController extends Controller
 {

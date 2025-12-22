@@ -1,30 +1,31 @@
 # =======================================
-# Laravel & PHP
+# Laravel 
 # =======================================
-/laravel/vendor/
-/laravel/node_modules/
-/laravel/storage/*.key
-/laravel/storage/logs/*
-/laravel/storage/framework/cache/*
-/laravel/storage/framework/sessions/*
-/laravel/storage/framework/views/*
-/laravel/bootstrap/cache/*.php
-/laravel/public/storage
-/laravel/.env
-/laravel/.env.example
+**/vendor/
+**/node_modules/
+
+**/.env
+**/.env.*
+!.env.example
+
+**/storage/logs/*
+**/storage/framework/cache/*
+**/storage/framework/sessions/*
+**/storage/framework/views/*
+**/bootstrap/cache/*.php
+**/public/storage
 
 # =======================================
 # Composer
 # =======================================
-composer.lock
-vendor/
+composer.phar
 
 # =======================================
-# NPM / Node
+# Node / NPM
 # =======================================
-node_modules/
 npm-debug.log
 yarn-error.log
+pnpm-debug.log
 
 # =======================================
 # Docker
@@ -32,24 +33,17 @@ yarn-error.log
 .dockerignore
 docker-compose.override.yml
 *.tar
-*.pid
-*.log
 
 # =======================================
-# VS Code / IDE
+# IDE
 # =======================================
 .vscode/
 .idea/
 *.swp
 *.swo
-*.bak
-*.tmp
 
 # =======================================
-# OS / Misc
+# OS
 # =======================================
 .DS_Store
 Thumbs.db
-.env.local
-.env.*.local
-*.zip

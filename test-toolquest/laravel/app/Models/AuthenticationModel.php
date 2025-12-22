@@ -7,16 +7,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class AuthenticationModel extends Model
 {
+    use HasFactory;
+
+    protected $table = 'logins'; // Verplicht omdat de tabel niet 'authentication_models' heet
+
     protected $fillable = [
         'username', 
-        'user_password' 
+        'password', // match met migratie
+        'email', 
+        'role'
     ];
 
-    function createNewUser(string $username, string $hashedPassword): bool {
+    function createNewUser(string $username, string $hashedPassword, string $email): bool {
         
         $user = $this->create([
             'username' => $username,
-            'user_password' => $hashedPassword,
+            'password' => $hashedPassword,
+            'email' => $email,
+            'role' => 'user'
         ]);
         // Controleer of de gebruiker succesvol is aangemaakt
         return (bool)$user; 
@@ -26,7 +34,7 @@ class AuthenticationModel extends Model
     }
 
     function getHashedPasswordByUsername(string $username): string {
-        $hash = $this->where('username', $username)->value('user_password');
+        $hash = $this->where('username', $username)->value('password');
         return $hash;
     }
 

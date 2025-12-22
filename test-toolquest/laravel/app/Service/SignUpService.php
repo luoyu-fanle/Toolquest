@@ -13,10 +13,10 @@ class SignUpService
         $this->authModel = $authModel;
     }
 
-    function createSignUp(string $username, string $inputHashedPassword): array {
+    function createSignUp(string $username, string $inputHashedPassword, string $email): array {
         $returnvalues = [];
 
-        if ($this->checkEmpty($username) || $this->checkEmpty($inputHashedPassword)) {
+        if ($this->checkEmpty($username) || $this->checkEmpty($inputHashedPassword)|| $this->checkEmpty($email)) {
             $returnvalues["empty_input"] = "Please fill in all the fields";
             return $returnvalues;
         }
@@ -26,7 +26,7 @@ class SignUpService
             return $returnvalues;
         }
 
-        if ($this->authModel->createNewUser($username, $inputHashedPassword)) {
+        if ($this->authModel->createNewUser($username, $inputHashedPassword, $email)) {
             $returnvalues["signup_success"] = "Sign up successful";
         } else {
             $returnvalues["signup_failed"] = "Failed to create user.";

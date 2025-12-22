@@ -42,7 +42,7 @@ class JWTService
         $issuedAt = time();
         $expiresAt = $issuedAt + 28800; ///8 uur
         $refreshToken = bin2hex(random_bytes(64));
-        // TODO: Zorg ervoor dat $this->authModel->saveRefreshToken de refresh token, user ID en expiresAt accepteert
+
         $saveTokenResult = $this->authModel->saveRefreshToken($userID, hash('sha256', $refreshToken), $expiresAt);
         if ($saveTokenResult === true) {
             $cookieResult = $this->sendCookie($refreshToken, "refresh_token", 28800);

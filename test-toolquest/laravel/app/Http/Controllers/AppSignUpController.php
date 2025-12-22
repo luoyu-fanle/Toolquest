@@ -17,11 +17,14 @@ class AppSignUpController extends Controller
         $validatedData = $request->validate([
             'username' => 'required|string|max:255',
             'password' => 'required|string|min:6',
+            'email'    => 'required|string|max:255',
         ]);
+
         $username = $validatedData['username'];
         $password = $validatedData['password'];
+        $email = $validatedData['email'];
 
-        $result = $this->signUpService->createSignUp($username, $password);
+        $result = $this->signUpService->createSignUp($username, $password, $email);
         if (isset($result['signup_success'])) {
             return redirect('/login')->with('success', $result['signup_success']);
         } else {

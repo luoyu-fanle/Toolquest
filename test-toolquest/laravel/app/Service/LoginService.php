@@ -44,7 +44,7 @@ class LoginService
         
         if ($userData) {
             $userID = $userData['id'];
-            $role = $userData['roles'];
+            $role = $userData['role'];
             
             $jwtTokenResult = $this->jwtService->makeJwtToken($userID, $username, $role);
             $refreshTokenResult = $this->jwtService->makeRefreshToken($userID);

@@ -24,14 +24,14 @@ test('createNewUser return true for creating user ', function () {
     $result = $this->model->createNewUser(
         'testuser2', 
         password_hash('secret', PASSWORD_BCRYPT), 
-        'test@example.com', 
+        'test2@example.com', 
         'user'
     );
 
     expect($result)->toBeTrue();
     $this->assertDatabaseHas('logins', [
-        'username' => 'testuser',
-        'email' => 'test@example.com'
+        'username' => 'testuser2',
+        'email' => 'test2@example.com'
     ]);
 });
 

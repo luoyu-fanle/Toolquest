@@ -16,7 +16,7 @@ class AppSignUpController extends Controller
 
         $validatedData = $request->validate([
             'username' => 'required|string|max:255',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string',
             'email'    => 'required|string|max:255',
         ]);
 
@@ -26,10 +26,12 @@ class AppSignUpController extends Controller
 
         $result = $this->signUpService->createSignUp($username, $password, $email);
         if (isset($result['signup_success'])) {
-            return redirect('/login')->with('success', $result['signup_success']);
+            return response()->json(['message' => $result['signup_success']],200);
         } else {
             $errorMessage = $result['username_exists'] ?? $result['empty_input'] ?? $result['signup_failed'] ?? 'An unknown error occurred.';
-            return redirect('/signup')->withInput()->withErrors(['signup_error' => $errorMessage]);
+            return response()->json([
+                'message' => $errorMessage
+            ],200);
         }
         
     }

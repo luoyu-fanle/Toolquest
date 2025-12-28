@@ -33,7 +33,7 @@ class AuthenticationModel extends Model
         return $this->where('username', $username)->exists();
     }
 
-    function getHashedPasswordByUsername(string $username): string {
+    function getHashedPasswordByUsername(string $username): string|null {
         $hash = $this->where('username', $username)->value('password');
         return $hash;
     }

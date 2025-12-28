@@ -18,7 +18,7 @@ class LoginService
 
     function createLogin(string $username, string $inputHashedPassword): array {
         $returnValues = [];
-
+        
         if ($this->checkEmpty($username) || $this->checkEmpty($inputHashedPassword)) {
             $returnValues["empty_input"] = "Please fill in all the fields";
             return $returnValues;
@@ -29,27 +29,27 @@ class LoginService
             return $returnValues;
         }
 
-        if (!$this->checkTokens($username)) {
-            $returnValues["login_failed"] = "Failed to create tokens.";
-            return $returnValues;
-        }
+        $token = $this->checkTokens($username);
 
-        $returnValues["login_success"] = "Login successful";
-        return $returnValues;
+        if (!$token) {
+            return ["login_failed" => "Failed to create tokens."];
+        }
+        
+        return [
+            "access_token" => $token, 
+
+        ];
     }
 
-    function checkTokens (string $username): bool {
+    function checkTokens (string $username): string|false {
         // Implement token validation logic here
         $userData = $this->authModel->getUserDataByUsername($username);
         
         if ($userData) {
-            $userID = $userData['id'];
-            $role = $userData['role'];
-            
-            $jwtTokenResult = $this->jwtService->makeJwtToken($userID, $username, $role);
-            $refreshTokenResult = $this->jwtService->makeRefreshToken($userID);
-            if ($jwtTokenResult !== null && $refreshTokenResult === true) {
-                return true;
+            $jwtTokenResult = $this->jwtService->makeJwtToken((int)$userData['id'], $username, (string)$userData['role']);
+            $refreshTokenResult = $this->jwtService->makeRefreshToken((int)$userData['id']);
+            if ($jwtTokenResult !== false && $refreshTokenResult === true) {
+                return $jwtTokenResult;
             }
 
         }

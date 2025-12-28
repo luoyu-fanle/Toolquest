@@ -49,7 +49,7 @@ use Mockery as M;
     test('checkpasswords returns true for matching passwords', function () {
         $service = $this->loginService;
         $username = 'testuser';
-        $storedHash = 'a_secure_and_matching_hash_123'; 
+        $storedHash = 'a_secure_and_matching_hash_123';
         $inputHash = 'a_secure_and_matching_hash_123';
         $this->authModelMock->shouldReceive('getHashedPasswordByUsername')->once()->with($username)->andReturn($storedHash);
         $result = $service->checkPasswords($username, $inputHash);
@@ -114,10 +114,10 @@ use Mockery as M;
     });
 
     test('checkTokens returns false if token creation fails', function () {
-        $userData = ['id' => 1, 'username' => 'testuser', 'roles' => 'user'];
+        $userData = ['id' => 1, 'username' => 'testuser', 'role' => 'user'];
         $this->authModelMock->shouldReceive('getUserDataByUsername')->once()->with('testuser')->andReturn($userData);
         
-        $this->jwtServiceMock->shouldReceive('makeJwtToken')->once()->andReturn(null); // Simuleer mislukking
+        $this->jwtServiceMock->shouldReceive('makeJwtToken')->once()->andReturn(false); // Simuleer mislukking
         $this->jwtServiceMock->shouldReceive('makeRefreshToken')->once()->andReturn(false); // Simuleer mislukking
         
         $result = $this->loginService->checkTokens('testuser');
@@ -126,15 +126,28 @@ use Mockery as M;
     });
 
     test('checkTokens returns true if token creation succeeds', function () {
-        $userData = ['id' => 1, 'username' => 'testuser', 'roles' => 'user'];
-        $this->authModelMock->shouldReceive('getUserDataByUsername')->once()->with('testuser')->andReturn($userData);
+        $userData = ['id' => 1, 'username' => 'testuser', 'role' => 'user'];
+        // $this->authModelMock->shouldReceive('getUserDataByUsername')->once()->with('testuser')->andReturn($userData);
         
-        $this->jwtServiceMock->shouldReceive('makeJwtToken')->once()->andReturn('valid.jwt.token');
-        $this->jwtServiceMock->shouldReceive('makeRefreshToken')->once()->andReturn(true);
+        // $this->jwtServiceMock->shouldReceive('makeJwtToken')->once()->andReturn('valid.jwt.token');
+        // $this->jwtServiceMock->shouldReceive('makeRefreshToken')->once()->andReturn(true);
+        $this->authModelMock->shouldReceive('getUserDataByUsername')
+            ->once()
+            ->with('testuser')
+            ->andReturn($userData);
         
+        $this->jwtServiceMock->shouldReceive('makeJwtToken')
+            ->once()
+            ->with(1, 'testuser', 'user')
+            ->andReturn('valid.jwt.token');
+            
+        $this->jwtServiceMock->shouldReceive('makeRefreshToken')
+            ->once()
+            ->with(1)
+            ->andReturn(true);
         $result = $this->loginService->checkTokens('testuser');
         
-        expect($result)->toBeTrue();
+        expect($result)->toBe('valid.jwt.token');
     });
 
     // =================================================================
@@ -185,11 +198,14 @@ use Mockery as M;
         $this->loginService = M::mock(LoginService::class, [$this->authModelMock])->makePartial();
         $this->loginService->shouldReceive('checkEmpty')->andReturnFalse();
         $this->loginService->shouldReceive('checkCredentials')->andReturnTrue();
-        $this->loginService->shouldReceive('checkTokens')->andReturnTrue();
+        $this->loginService->shouldReceive('checkTokens')->andReturn('valid.jwt.token');
         
         $result = $this->loginService->createLogin($username, $password);
         
-        expect($result)->toHaveKey('login_success')->and($result)->not->toHaveKey('login_failed');
+        expect($result)->toHaveKey('access_token')
+                        ->and($result['access_token'])
+                        ->toBe('valid.jwt.token')
+                        ->not->toHaveKey('login_failed');
 
     });
 

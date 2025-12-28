@@ -36,14 +36,14 @@ use Mockery as M;
     // =================================================================
     test('createSignUp returns empty_input when username is empty', function () {
         $this->signupService->shouldReceive('checkEmpty')->with('')->andReturn(true);
-        $result = $this->signupService->createSignUp('', 'password123');
+        $result = $this->signupService->createSignUp('', 'password123', 'test@example.com');
         expect($result)->toHaveKey('empty_input')->and($result['empty_input'])->toBe('Please fill in all the fields');
     });
     
     test('createSignUp returns username_exists when username already exists', function () {
         $this->signupService->shouldReceive('checkEmpty')->andReturnFalse();
         $this->authModelMock->shouldReceive('checkUsernameExistence')->andReturnTrue();
-        $result = $this->signupService->createSignUp('existing_user', 'password123');
+        $result = $this->signupService->createSignUp('existing_user', 'password123', 'test@example.com');
         expect($result)->toHaveKey('username_exists')->and($result['username_exists'])->toBe('Username already exists.');
     });
 
@@ -51,7 +51,7 @@ use Mockery as M;
         $this->signupService->shouldReceive('checkEmpty')->andReturnFalse();
         $this->authModelMock->shouldReceive('checkUsernameExistence')->andReturnFalse();
         $this->authModelMock->shouldReceive('createNewUser')->andReturnFalse();
-        $result = $this->signupService->createSignUp('new_user', 'password123');
+        $result = $this->signupService->createSignUp('new_user', 'password123', 'test@example.com');
         expect($result)->toHaveKey('signup_failed')->and($result['signup_failed'])->toBe('Failed to create user.');
     });
 
@@ -59,6 +59,6 @@ use Mockery as M;
         $this->signupService->shouldReceive('checkEmpty')->andReturnFalse();
         $this->authModelMock->shouldReceive('checkUsernameExistence')->andReturnFalse();
         $this->authModelMock->shouldReceive('createNewUser')->andReturnTrue();
-        $result = $this->signupService->createSignUp('new_user', 'password123');
+        $result = $this->signupService->createSignUp('new_user', 'password123','test@example.com');
         expect($result)->toHaveKey('signup_success')->and($result['signup_success'])->toBe('Sign up successful');
     });

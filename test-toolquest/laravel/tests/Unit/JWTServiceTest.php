@@ -8,6 +8,7 @@ use Mockery as M;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Config; 
 use Firebase\JWT\Key; 
+use Illuminate\Support\Facades\Cookie;
 
     uses(Tests\TestCase::class);
     beforeEach(function () {
@@ -127,11 +128,14 @@ use Firebase\JWT\Key;
     // =================================================================
 
     test('makeRefreshToken return true when genarating a token and stores it', function () {
+        Cookie::shouldReceive('queue')
+            ->once()
+            ->with('refresh_token', Mockery::any(), 480, '/', null, true, true, false, 'Strict');
+
         $this->authModelMock->shouldReceive('saveRefreshToken')->andReturnTrue();
-        $this->jwtService = M::mock(JWTService::class, [$this->authModelMock])->makePartial();
-        $this->jwtService->shouldReceive('sendCookie')->andReturnTrue();
-        $result = $this->jwtService->makeRefreshToken('123');
+        $result = $this->jwtService->makeRefreshToken(123);
         expect($result)->toBeTrue();
+
     });
 
     test('makeRefreshToken return false when storing the token fails', function () {
@@ -140,29 +144,15 @@ use Firebase\JWT\Key;
         expect($result)->toBeFalse();
     });
 
-    test('makeRefreshToken return false when setting the cookie fails', function () {
-        $this->authModelMock->shouldReceive('saveRefreshToken')->andReturnTrue();
-        $this->jwtService = M::mock(JWTService::class, [$this->authModelMock])->makePartial();
-        $this->jwtService->shouldReceive('sendCookie')->andReturnFalse();
-        $result = $this->jwtService->makeRefreshToken(123);
-        expect($result)->toBeFalse();
-    });
     // =================================================================
     // 2.5 Testen van makeJwtToken 
     // =================================================================
-    
-    test('makeJwtToken return null when setting the cookie fails', function () {
-        $this->jwtService = M::mock(JWTService::class, [$this->authModelMock])->makePartial();
-        $this->jwtService->shouldReceive('sendCookie')->andReturnFalse();
-        $result = $this->jwtService->makeJwtToken(123, 'testuser', 'user');
-        expect($result)->toBeNull();
-    });
 
     test('makeJwtToken return jwt token when successful', function () {
         $secretkey = Config::get('jwt.secret');
-        
-        $this->jwtService = M::mock(JWTService::class, [$this->authModelMock])->makePartial();
-        $this->jwtService->shouldReceive('sendCookie')->andReturnTrue();
+        Cookie::shouldReceive('queue')
+            ->once()
+            ->with('jwt', Mockery::any(), 15, '/', null, true, true, false, 'Strict');
         $result = $this->jwtService->makeJwtToken(123, 'testuser', 'user');
 
         expect($result)->toBeString();

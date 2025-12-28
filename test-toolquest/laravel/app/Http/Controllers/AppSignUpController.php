@@ -26,12 +26,17 @@ class AppSignUpController extends Controller
 
         $result = $this->signUpService->createSignUp($username, $password, $email);
         if (isset($result['signup_success'])) {
-            return response()->json(['message' => $result['signup_success']],200);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $result['signup_success']], 200);
+            }
+            return redirect()->route('login')->with('success', $result['signup_success']);
+            // return response()->json(['message' => $result['signup_success']],200);
         } else {
             $errorMessage = $result['username_exists'] ?? $result['empty_input'] ?? $result['signup_failed'] ?? 'An unknown error occurred.';
-            return response()->json([
-                'message' => $errorMessage
-            ],200);
+            if ($request->wantsJson()) {
+                        return response()->json(['message' => $errorMessage], 200);
+            }
+            return redirect()->back()->withErrors(['signup_error' => $errorMessage])->withInput();
         }
         
     }

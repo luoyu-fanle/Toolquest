@@ -24,16 +24,22 @@ class AppLogInController extends Controller
 
         $result = $this->loginService->createLogIn($username, $password);
         if (isset($result['access_token'])) {
-            return response()->json([
-                'message' => 'Login successful',
-                'access_token' => $result['access_token'],
-                'user' => $username
-            ], 200);
+            if($request->wantsJson()){
+                return response()->json([
+                    'message' => 'Login successful',
+                    'access_token' => $result['access_token'],
+                    'user' => $username
+                ], 200);
+            }
+            return redirect()->route('profile');
         } else {
             $errorMessage = $result['invalid_credentials'] ?? $result['empty_input'] ?? $result['login_failed'] ?? 'An unknown error occurred.';
-            return response()->json([
-                'message' => $errorMessage
-            ],200);
+            if($request->wantsJson()){
+                return response()->json([
+                    'message' => $errorMessage
+                ],200);
+            }
+            return redirect()->back()->withErrors(['login_error' => $errorMessage])->withInput($request->only('username'));
         }   
     }
 }

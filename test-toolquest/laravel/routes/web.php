@@ -8,8 +8,12 @@ use App\Http\Controllers\AppLogInController;
 use App\Http\Controllers\AdminController; // Zorg dat deze Controller bestaat!
 
 Route::view('/signup', 'signup')->name('signup');
-Route::view('/profile', 'profile')->name('profile');
+// Route::view('/profile/{id}', 'profile')->name('profile');
 Route::view('/login', 'login')->name('login');
+
+Route::get('/profile',[ProfileController::class, 'auth'])
+    ->middleware('jwt.auth')
+    ->name('profile');
 
 Route::middleware('jwt.admin')->group(function () {
     
@@ -21,7 +25,7 @@ Route::middleware('jwt.admin')->group(function () {
 });
 
 Route::get('/', function () {
-    return view('test-sql');
+    return view('home');
 });
 
 Route::post('/api/signup', [AppSignUpController::class, 'signUp']);

@@ -21,16 +21,16 @@ class ProfileController extends Controller
 
         return view('profile', ['username' => $user->Username]);
     }
-    
+
     public function auth(Request $request)
     {
         // Haal de data op die de middleware in het request heeft gestopt
         $userData = $request->get('authenticated_user');
 
-        return view('profile', [
-            'username' => $userData->username,
-            'role'     => $userData->roles,
-            'id'       => $userData->user_id
+        return view('profile_jwt', [
+            'username' => $userData['username'],
+            'role'     => $userData['roles'],
+            'id'       => $userData['user_id']
         ]);
     }
 

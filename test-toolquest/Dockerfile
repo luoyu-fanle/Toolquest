@@ -1,32 +1,24 @@
-# Gebruik officiële PHP 8.3 + Apache image
-FROM php:8.3-apache
+FROM php:8.3-fpm
 
-# Werkdir instellen in container
-WORKDIR /var/www/html
-
-# Nodige PHP-extensies installeren
+# Install PHP extensions en dependencies
 RUN apt-get update && apt-get install -y \
-    libpq-dev libzip-dev unzip git \
-    && docker-php-ext-install pdo pdo_mysql zip
+    git unzip curl libpng-dev libonig-dev libxml2-dev \
+    zip libzip-dev \
+ && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl \
+ && rm -rf /var/lib/apt/lists/*
 
-# Composer toevoegen
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Laravel bestanden kopiëren
-COPY . .
+WORKDIR /var/www
 
-# Dependencies installeren
-RUN composer install --no-interaction --no-progress
+# Composer dependencies eerst (snellere builds bij kleine veranderingen)
+COPY laravel/composer.json laravel/composer.lock ./
+RUN composer install --no-dev --optimize-autoloader
 
-# Apache configureren voor Laravel (public map als root)
-RUN a2enmod rewrite
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+# Rest van de app
+COPY laravel/ ./
 
-# Zorg dat Laravel schrijfrechten heeft
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Poort 80 openzetten
-EXPOSE 80
-
-# Apache starten
-CMD ["apache2-foreground"]
+# Permissions fix
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache

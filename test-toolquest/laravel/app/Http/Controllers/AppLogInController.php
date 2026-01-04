@@ -31,7 +31,7 @@ class AppLogInController extends Controller
                     'user' => $username
                 ], 200);
             }
-            return redirect()->route('profile');
+            return redirect()->route('home')->with('success', 'Login successful');
         } else {
             $errorMessage = $result['invalid_credentials'] ?? $result['empty_input'] ?? $result['login_failed'] ?? 'An unknown error occurred.';
             if($request->wantsJson()){

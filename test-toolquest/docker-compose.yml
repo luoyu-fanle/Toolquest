@@ -1,34 +1,53 @@
 version: "3.9"
 
 services:
-  app:
-    build: .
-    container_name: laravel-apache
-    ports:
-      - "8080:80"
-    volumes:
-      - .:/var/www/html
-    depends_on:
-      - db
-    environment:
-      - APACHE_DOCUMENT_ROOT=/var/www/html/public
-    networks:
-      - laravelnet
-
+  # Database
   db:
-    image: mysql:8.3
-    container_name: laravel-db
+    image: mysql:8.0
+    container_name: mysql_db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: laravel
       MYSQL_USER: laravel
       MYSQL_PASSWORD: laravel
+      MYSQL_ROOT_PASSWORD: idkwatvoorRootpassworrdalleentestnu
     ports:
       - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
     networks:
-      - laravelnet
+      - laravel_network
+
+  # PHP / Laravel
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    volumes:
+      - ./laravel:/var/www
+    depends_on:
+      - db
+    networks:
+      - laravel_network
+
+  # Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: laravel_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./laravel:/var/www
+      - ./nginx/default.conf:/etc/nginx/conf.d/laravel.conf
+    depends_on:
+      - app
+    networks:
+      - laravel_network
 
 networks:
-  laravelnet:
+  laravel_network:
     driver: bridge
+
+volumes:
+  db_data:

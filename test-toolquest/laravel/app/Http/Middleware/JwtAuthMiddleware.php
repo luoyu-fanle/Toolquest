@@ -7,10 +7,15 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use App\Service\JWTService;
 
 class JwtAuthMiddleware
 {
-
+    protected $jwtService;
+    public function __construct(JWTService $jwtService)
+    {
+        $this->jwtService = $jwtService;
+    }
     public function handle(Request $request, Closure $next): Response
     {
         $token = $request->cookie('jwt');
@@ -19,17 +24,11 @@ class JwtAuthMiddleware
             return redirect()->route('login')->withErrors(['auth' => 'Sessie verlopen, log opnieuw in.']);
         }
 
-        try {
-            $secretKey = config('jwt.secret');
-            $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
-
-            // Belangrijk: Zet de user data in het request object
-            // Nu is het overal beschikbaar via $request->attributes
-            $request->attributes->add(['authenticated_user' => $decoded]);
-
-            return $next($request);
-        } catch (\Exception $e) {
-            return redirect()->route('login');
+        $decodedJWT = $this->jwtService->decodeRandomJwtToken($token);
+        if (!is_array($decodedJWT)) {
+            return redirect()->route('login')->withErrors(['auth' => 'Ongeldige token, log opnieuw in.']);
         }
+        $request->attributes->add(['authenticated_user' => $decodedJWT['payload']]);
+        return $next($request);
     }
 }

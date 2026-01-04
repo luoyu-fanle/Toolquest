@@ -5,28 +5,35 @@ use App\Http\Controllers\VulnLoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AppSignUpController;
 use App\Http\Controllers\AppLogInController;
-use App\Http\Controllers\AdminController; // Zorg dat deze Controller bestaat!
+use App\Http\Controllers\Admin\AdminUserController; 
+use App\Http\Controllers\SQLController;
 
 Route::view('/signup', 'signup')->name('signup');
-// Route::view('/profile/{id}', 'profile')->name('profile');
 Route::view('/login', 'login')->name('login');
 
+
+Route::get('/profile/overbose', [SQLController::class, 'getProfileOverbose'])->name('profile.overbose');
+Route::get('/profile/silent', [SQLController::class, 'getProfileSilent'])->name('profile.silent');
 Route::get('/profile',[ProfileController::class, 'auth'])
     ->middleware('jwt.auth')
-    ->name('profile');
+    ->name('profile.jwt');
 
 Route::middleware('jwt.admin')->group(function () {
-    
-    Route::view('/admin', 'admin')->name('admin');
-    Route::view('/admin/user', 'admin-user')->name('admin-user');
-    Route::view('/admin/permissions', 'admin-permissions')->name('admin-permissions');
-    Route::view('/admin/logs', 'admin-logs')->name('admin-logs');
+    Route::get('/admin', [AdminUserController::class, 'index'])->name('admin');
+
+    Route::post('/admin/user/create', [AdminUserController::class, 'create'])->name('admin.user.create');
+    Route::put('/admin/user/edit/{id}', [AdminUserController::class, 'edit'])->name('admin.user.edit');
+    Route::delete('/admin/user/delete/{id}', [AdminUserController::class, 'delete'])->name('admin.user.delete');
+
+    // Route::view('/admin/user', 'admin-user')->name('admin-user');
+    // Route::view('/admin/permissions', 'admin-permissions')->name('admin-permissions');
+    // Route::view('/admin/logs', 'admin-logs')->name('admin-logs');
     //hier moeten nog post reoutes komen voor admin acties    
 });
 
 Route::get('/', function () {
     return view('home');
-});
+})->name('home');
 
 Route::post('/api/signup', [AppSignUpController::class, 'signUp']);
 Route::post('/api/login', [AppLogInController::class, 'logIn']);

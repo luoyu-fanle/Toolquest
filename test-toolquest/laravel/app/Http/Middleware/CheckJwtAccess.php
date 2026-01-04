@@ -27,20 +27,20 @@ class CheckJwtAccess
         }
 
         $path = $request->path();
-        $userData = null;
-        if($path ==='admin/user'){
-            $userData = $this->jwtService->decodeRandomJwtToken($jwtToken);
-        }else{
-            $userData = $this->jwtService->verifyJwtTokenWeakKey($jwtToken);
-        } 
-        
+        $userData = $this->jwtService->decodeRandomJwtToken($jwtToken);
+
+        // if($path ==='admin/user'){
+        //     $userData = $this->jwtService->decodeRandomJwtToken($jwtToken);
+        // }else{
+        //     $userData = $this->jwtService->verifyJwtTokenWeakKey($jwtToken);
+        // } 
         
         if (!is_array($userData)) {
             // Token ongeldig (verlopen of vervalst): weigeren
             return redirect('/login')->withErrors(['auth' => 'Toegang geweigerd: Ongeldige of verlopen token.']);
         }
 
-        if (!isset($userData['roles']) || $userData['roles'] !== 'admin') {
+        if (!isset($userData['payload']['roles']) || $userData['payload']['roles'] !== 'admin') {
             return redirect('/')->withErrors(['auth' => 'Toegang geweigerd: Onvoldoende rechten.']);
         }
 

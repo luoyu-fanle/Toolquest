@@ -20,17 +20,17 @@ class SQLController extends Controller
         try {
             $result = $this->sqlService->vulnerableQuery($id);
             if (count($result) > 0) {
-                if($request->wantsJson()){
-                    return response()->json($result);
-                }
+                // if($request->wantsJson()){
+                //     return response()->json($result);
+                // }
                 // return redirect()->route('profile.overbose')->with('result', $result);
                 return view('profile_sql', ['result' => $result]);
             } 
             else {
-                if($request->wantsJson()){
-                    return response()->json(['errormessage' => $result], 404);
-                }
-                return redirect()->route('home')->withErrors(['errormessage' => $result]);
+                // if($request->wantsJson()){
+                //     return response()->json(['errormessage' => $result], 404);
+                // }
+                return redirect()->route('home')->withErrors(['errormessage' => 'No user found']);
                 // return view('home', ['errormessage' => $result]);
             }
         } catch (\Exception $e) {
@@ -72,21 +72,25 @@ class SQLController extends Controller
     }
 
 
-    // function getProfileSafe(Request $request)
-    // {
-    //     $id = $request->query('id');
-    //     $result = $this->sqlService->safeQuery($id);
-    //     if (count($result) > 0) {
-    //         if($request->wantsJson()){
-    //             return response()->json($result);
-    //         }
-    //         return view('profile', ['result' => $result]);
-    //     } 
-    //     else {
-    //         if($request->wantsJson()){
-    //             return response()->json(['errormessage' => $result], 404);
-    //         }
-    //         return view('home', ['errormessage' => $result]);
-    //     }
-    // }
+    function getProfileSafe(Request $request)
+    {
+        $id = $request->query('id');
+        $result = $this->sqlService->safeQuery($id);
+        if (count($result) > 0) {
+            if($request->wantsJson()){
+                return response()->json($result);
+            }
+                return view('profile_sql', [
+                    'username' => $result[0]->username,
+                    'role'     => $result[0]->role,
+                    'id'       => $result[0]->id
+                ]);
+        } 
+        else {
+            if($request->wantsJson()){
+                return response()->json(['errormessage' => $result], 404);
+            }
+            return view('home', ['errormessage' => $result]);
+        }
+    }
 }

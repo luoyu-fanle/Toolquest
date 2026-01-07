@@ -28,12 +28,6 @@ class CheckJwtAccess
 
         $path = $request->path();
         $userData = $this->jwtService->decodeRandomJwtToken($jwtToken);
-
-        // if($path ==='admin/user'){
-        //     $userData = $this->jwtService->decodeRandomJwtToken($jwtToken);
-        // }else{
-        //     $userData = $this->jwtService->verifyJwtTokenWeakKey($jwtToken);
-        // } 
         
         if (!is_array($userData)) {
             // Token ongeldig (verlopen of vervalst): weigeren

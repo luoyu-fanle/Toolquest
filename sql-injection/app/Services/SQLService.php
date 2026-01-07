@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Service;
+namespace App\Services;
 use App\Models\QuoteModel;
-use Illuminate\Support\Facades\DB;
 
 class SQLService
 {
+
 
     public function vulnerableQuery($id)
     {

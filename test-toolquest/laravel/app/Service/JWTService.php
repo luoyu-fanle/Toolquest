@@ -97,7 +97,7 @@ class JWTService
         $header = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
         $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
         
-        if ($this->validateExpiration($payload)) {
+        if (!$this->validateExpiration($payload)) {
             return null; // Token is expired
         }
 
@@ -110,10 +110,10 @@ class JWTService
 
     function validateExpiration($payload): bool {
         $currentTime = time();
-        if (isset($payload['exp']) && $payload['exp'] < $currentTime ) {
-            return true; // Token is expired
+        if (isset($payload['exp']) && $payload['exp'] > $currentTime ) {
+            return true; // Token is valid
         }
-        return false; // Token is valid
+        return false; // Token is expirate
     }
 
 }

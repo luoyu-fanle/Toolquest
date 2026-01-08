@@ -25,10 +25,6 @@ Route::middleware('jwt.admin')->group(function () {
     Route::put('/admin/user/edit/{id}', [AdminUserController::class, 'edit'])->name('admin.user.edit');
     Route::delete('/admin/user/delete/{id}', [AdminUserController::class, 'delete'])->name('admin.user.delete');
 
-    // Route::view('/admin/user', 'admin-user')->name('admin-user');
-    // Route::view('/admin/permissions', 'admin-permissions')->name('admin-permissions');
-    // Route::view('/admin/logs', 'admin-logs')->name('admin-logs');
-    //hier moeten nog post reoutes komen voor admin acties    
 });
 
 Route::get('/', function () {

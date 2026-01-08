@@ -19,6 +19,8 @@ class JWTService
 
     function makeJwtToken(int $userID, string $username, string $role): string|false {
         $secretkey = config('jwt.secret'); ///van .env
+        // dump ($secretkey);
+        $paddedKey = str_pad($secretkey, 32, "\0");
         $issuedAt = time();
         $expiresAt = $issuedAt + 900; // 15 minuten
 
@@ -30,10 +32,13 @@ class JWTService
             'username'=> $username
         ];
         try{
-            $jwt = JWT::encode($payload, $secretkey, 'HS256');
+            $jwt = JWT::encode($payload, $paddedKey, 'HS256');
+            // dump($jwt);
+            // dump("JWT Error: " . $e->getMessage());
             cookie()->queue('jwt', $jwt, 15, '/', null, true, true, false, 'Strict');
             return $jwt;
         }catch (\Exception $e) {
+            dump("JWT Error: " . $e->getMessage());
             return false;
         }
 
@@ -77,7 +82,8 @@ class JWTService
 
         try {
              $secretkey = config('jwt.secret');
-            $decoded = JWT::decode($jwtToken, new Key($secretkey, 'HS256'));
+             $paddedKey = str_pad($secretkey, 32, "\0");
+            $decoded = JWT::decode($jwtToken, new Key($paddedKey, 'HS256'));
             return (array)$decoded; // Token is valid
         } catch (\Exception $e) {
             return null; // Token is invalid

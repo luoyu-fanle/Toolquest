@@ -19,14 +19,13 @@ class JwtAuthMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $token = $request->cookie('jwt');
-
         if (!$token) {
-            return redirect()->route('login')->withErrors(['auth' => 'Sessie verlopen, log opnieuw in.']);
+            return redirect()->route('login')->withErrors(['auth' => 'Authentication required. Please log in.']);
         }
 
         $decodedJWT = $this->jwtService->decodeRandomJwtToken($token);
         if (!is_array($decodedJWT)) {
-            return redirect()->route('login')->withErrors(['auth' => 'Ongeldige token, log opnieuw in.']);
+            return redirect()->route('login')->withErrors(['auth' => 'Authentication required. Please log in.']);
         }
         $request->attributes->add(['authenticated_user' => $decodedJWT['payload']]);
         return $next($request);

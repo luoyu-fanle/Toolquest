@@ -14,6 +14,13 @@ beforeEach(function () {
         'email' => 'victim@example.com',
         'role' => 'user'
     ]);
+        
+    AuthenticationModel::create([
+        'username' => 'admin_user',
+        'password' => bcrypt('topsecret'),
+        'email' => 'admin@example.com',
+        'role' => 'admin'
+    ]);
 });
 
 // --- TEST 1: OVERBOSE ROUTE (TOONT FOUTEN) ---
@@ -50,16 +57,8 @@ test('overbose route toont errormessage bij niet bestaand ID', function () {
 
 
 test('overbose route toont meerdere gebruikers bij een succesvolle OR 1=1 injectie', function () {
-    // Maak een tweede gebruiker
-    AuthenticationModel::create([
-        'username' => 'admin_user',
-        'password' => bcrypt('topsecret'),
-        'email' => 'admin@example.com',
-        'role' => 'admin'
-    ]);
 
-    // Voer de aanval uit
-    $response = $this->get(route('profile.overbose', ['id' => '1 OR 1=1']));
+    $response = $this->get('/profile/overbose?id=1 OR 1=1');
 
     $response->assertStatus(200);
     
@@ -68,20 +67,51 @@ test('overbose route toont meerdere gebruikers bij een succesvolle OR 1=1 inject
     $response->assertSee('admin_user');
 });
 
-// --- TEST 2: SILENT ROUTE (VERBERGT FOUTEN) ---
 
-test('silent route verbergt technische database errors', function () {
-    // Zelfde foute input
-    $response = $this->get(route('profile.silent', ['id' => "1'"]));
+// --- TEST 2: SILENT ROUTE SCENARIO'S ---
 
-    $response->assertStatus(302);
-    
-    // De silent route moet een generieke melding geven, NIET de SQL error
-    $response->assertSessionHasErrors(['msg']);
-    
-    $errors = session('errors')->getBag('default')->get('msg');
-    
-    expect($errors[0])->toBe('Something went wrong')
-        ->and($errors[0])->not->toContain('syntax error');
+test('silent route: succesvol profiel ophalen (id=1)', function () {
+    // Normaal gedrag: gebruiker bestaat
+    $response = $this->get('/profile/silent?id=1');
+
+    $response->assertStatus(200);
+    $response->assertViewIs('profile_sql');
+    $response->assertSee('victim_user'); 
+    $response->assertViewHas('username', 'victim_user');
 });
 
+test('silent route: verbergt database errors bij syntax fout (id=1\')', function () {
+    // Aanval: syntax fout forceren
+    $response = $this->get('/profile/silent?id=1\'');
+
+    $response->assertStatus(302);
+    $response->assertRedirect(route('home'));
+    $response->assertSessionHasErrors(['SQL Error message']);
+    
+    $errors = session('errors')->getBag('default')->get('SQL Error message');
+    
+    expect($errors[0])->toBe('No user found');
+    expect($errors[0])->not->toContain('syntax error');
+    expect($errors[0])->not->toContain('SELECT');
+});
+
+test('silent route: succesvolle injectie (id=1 OR 1=1)', function () {
+
+    // Aanval: id=1 OR 1=1 zorgt ervoor dat de query resultaten vindt
+    $response = $this->get('/profile/silent?id=1 OR 1=1');
+
+    $response->assertStatus(200);
+    $response->assertViewIs('profile_sql');
+    $response->assertSee('victim_user');
+    $response->assertDontSee('admin_user');
+});
+
+test('silent route: geeft fout bij niet bestaand ID (id=999)', function () {
+    $response = $this->get('/profile/silent?id=999');
+
+    $response->assertStatus(302);
+    $response->assertSessionHasErrors(['errormessage']);
+    
+    $errors = session('errors')->getBag('default')->get('errormessage');
+    expect($errors[0])->toBe('No user found');
+});

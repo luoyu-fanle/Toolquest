@@ -50,6 +50,7 @@ jobs:
     # Prepare Laravel
     # -------------------------
     - name: Copy .env
+      working-directory: test-toolquest/laravel
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
     - name: Install dependencies

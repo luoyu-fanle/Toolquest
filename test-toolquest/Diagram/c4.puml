@@ -1,0 +1,112 @@
+@startuml
+skinparam componentStyle uml2
+
+package "App\Http\Controllers" {
+    class AppLogInController {
+        - loginService: LoginService
+        + logIn(Request): Response
+    }
+    class AppSignUpController {
+        - signUpService: SignUpService
+        + signUp(Request): Response
+    }
+    class SQLController {
+        - sqlService: SQLService
+        + getProfileOverbose(Request): Response
+        + getProfileSilent(Request): Response
+    }
+    class ProfileController {
+        + auth(Request): Response
+    } 
+    class AdminUserController {
+        + index()
+        + create(Request): Response
+        + delete(Request): Response
+        + edit(Request): Response
+    }
+}
+
+package "App\Http\Middleware" {
+    class CheckJwtAccess {
+        - jwtService: JWTService
+        + handle(Request, Closure): Response
+    } 
+    class JwtAuthMiddleware {
+        - jwtService: JWTService
+        + handle(Request, Closure): Response
+    }
+}
+
+package "App\Service" {
+    class LoginService {
+        - authModel: AuthenticationModel
+        - jwtService: JWTService
+        + __construct(AuthenticationModel, JWTService)
+        + createLogin(username, pass): array
+    }
+    class JWTService {
+        + makeJwtToken(userId, username, role): string
+    }
+    class SignUpService {
+        - authModel: AuthenticationModel
+        + createSignUp(user, pass, email): array
+    }
+    class SQLService {
+        + vulnerableQuery(id): array
+        + safeQuery(id): array
+    }
+}
+
+package "App\Models" {
+    class AuthenticationModel {
+        + table: string = "logins"
+        + getUserDataByUsername(username): array
+    }
+    class RefreshTokenModel {
+        + create(...)
+    }
+}
+
+database "MYSQL"{
+  entity "logins" {
+    + id : INT <<PK>>
+    + username : VARCHAR(50)
+    + password : VARCHAR(255)
+    + email    : VARCHAR(50) <<UNIQUE>>
+    + role     : ENUM('user','moderator', 'admin')
+}
+  entity "tokens"{
+    +id : INT <<PK>>
+    +user_id : INT <<FK>>
+    +token : VARCHAR(255)
+    +expires_at : DATETIME
+}
+
+
+}
+
+' Relaties
+CheckJwtAccess --> JWTService : uses
+JwtAuthMiddleware --> JWTService : uses
+CheckJwtAccess ..> AdminUserController : filters
+JwtAuthMiddleware ..> ProfileController : filters
+
+SQLController --> SQLService : injects
+AppSignUpController --> SignUpService : injects
+AppLogInController --> LoginService : injects
+
+SignUpService --> AuthenticationModel : uses
+LoginService --> AuthenticationModel : uses
+LoginService --> JWTService : uses
+AuthenticationModel --> RefreshTokenModel : hasMany
+logins --> AuthenticationModel : "user data"
+tokens --> RefreshTokenModel : "refresh tokens"
+logins --> tokens : hasMany
+SQLService ..> logins : "raw query"
+
+' De note gekoppeld aan de klasse
+note bottom of SQLService
+  vulnerableQuery:
+  "SELECT * FROM logins WHERE id = " . $id
+end note
+@enduml

@@ -2,9 +2,9 @@ name: Laravel CI
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "dev" ]
 
 permissions:
   contents: read
@@ -21,13 +21,19 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.0'
+        php-version: '8.3'
 
     # -------------------------
     # Checkout code
     # -------------------------
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Debug repository structure
+      run: |
+        pwd
+        ls -la
+        ls -la test-toolquest || true
 
     # -------------------------
     # Cache Composer
@@ -44,18 +50,23 @@ jobs:
     # Prepare Laravel
     # -------------------------
     - name: Copy .env
+      working-directory: test-toolquest/laravel
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
     - name: Install dependencies
+      working-directory: test-toolquest/laravel
       run: composer install --no-interaction --prefer-dist
 
     - name: Generate app key
+      working-directory: test-toolquest/laravel
       run: php artisan key:generate
 
     - name: Fix permissions
+      working-directory: test-toolquest/laravel
       run: chmod -R 777 storage bootstrap/cache
 
     - name: Create SQLite database
+      working-directory: test-toolquest/laravel
       run: |
         mkdir -p database
         touch database/database.sqlite
@@ -64,6 +75,7 @@ jobs:
     # Run tests
     # -------------------------
     - name: Run tests
+      working-directory: test-toolquest/laravel
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite

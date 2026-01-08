@@ -29,6 +29,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Debug repository structure
+      run: |
+        pwd
+        ls -la
+        ls -la test-toolquest || true
+
     # -------------------------
     # Cache Composer
     # -------------------------

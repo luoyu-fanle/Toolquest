@@ -47,12 +47,15 @@ jobs:
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
     - name: Install dependencies
+      working-directory: test-toolquest/laravel
       run: composer install --no-interaction --prefer-dist
 
     - name: Generate app key
+      working-directory: test-toolquest/laravel
       run: php artisan key:generate
 
     - name: Fix permissions
+      working-directory: test-toolquest/laravel
       run: chmod -R 777 storage bootstrap/cache
 
     - name: Create SQLite database
@@ -64,6 +67,7 @@ jobs:
     # Run tests
     # -------------------------
     - name: Run tests
+      working-directory: test-toolquest/laravel
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite

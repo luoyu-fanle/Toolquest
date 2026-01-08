@@ -66,6 +66,7 @@ jobs:
       run: chmod -R 777 storage bootstrap/cache
 
     - name: Create SQLite database
+      working-directory: test-toolquest/laravel
       run: |
         mkdir -p database
         touch database/database.sqlite

@@ -1,0 +1,104 @@
+name: Laravel CI
+
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+permissions:
+  contents: read
+  packages: write   # nodig voor GHCR
+
+jobs:
+  laravel-tests-and-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    # -------------------------
+    # Setup PHP
+    # -------------------------
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+
+    # -------------------------
+    # Checkout code
+    # -------------------------
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Debug repository structure
+      run: |
+        pwd
+        ls -la
+        ls -la test-toolquest || true
+
+    # -------------------------
+    # Cache Composer
+    # -------------------------
+    - name: Cache Composer dependencies
+      uses: actions/cache@v4
+      with:
+        path: vendor
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
+
+    # -------------------------
+    # Prepare Laravel
+    # -------------------------
+    - name: Copy .env
+      working-directory: test-toolquest/laravel
+      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+    - name: Install dependencies
+      working-directory: test-toolquest/laravel
+      run: composer install --no-interaction --prefer-dist
+
+    - name: Generate app key
+      working-directory: test-toolquest/laravel
+      run: php artisan key:generate
+
+    - name: Fix permissions
+      working-directory: test-toolquest/laravel
+      run: chmod -R 777 storage bootstrap/cache
+
+    - name: Create SQLite database
+      working-directory: test-toolquest/laravel
+      run: |
+        mkdir -p database
+        touch database/database.sqlite
+
+    # -------------------------
+    # Run tests
+    # -------------------------
+    - name: Run tests
+      working-directory: test-toolquest/laravel
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
+      run: php artisan test
+
+    # # -------------------------
+    # # Login to GitHub Container Registry
+    # # -------------------------
+    # - name: Login to GHCR
+    #   uses: docker/login-action@v3
+    #   with:
+    #     registry: ghcr.io
+    #     username: ${{ github.actor }}
+    #     password: ${{ secrets.GITHUB_TOKEN }}
+
+    # # -------------------------
+    # # Build & Push Docker image
+    # # -------------------------
+    # - name: Build and push Docker image
+    #   uses: docker/build-push-action@v5
+    #   with:
+    #     context: .
+    #     push: true
+    #     tags: |
+    #       ghcr.io/${{ github.repository }}:latest
+    #       ghcr.io/${{ github.repository }}:${{ github.sha }}
